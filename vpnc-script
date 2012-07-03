@@ -77,19 +77,20 @@ PATH=/sbin:/usr/sbin:$PATH
 
 OS="`uname -s`"
 
-HOOKS_DIR=/etc/vpnc
-DEFAULT_ROUTE_FILE=/var/run/vpnc/defaultroute
-RESOLV_CONF_BACKUP=/var/run/vpnc/resolv.conf-backup
+HOOKS_DIR="${HOOKS_DIR:-/etc/vpnc}"
+VAR_RUN="${VAR_RUN:-/var/run/vpnc}"
+DEFAULT_ROUTE_FILE="${VAR_RUN}/defaultroute"
+RESOLV_CONF_BACKUP="${VAR_RUN}/resolv.conf-backup"
 SCRIPTNAME=`basename $0`
 
 # some systems, eg. Darwin & FreeBSD, prune /var/run on boot
-if [ ! -d "/var/run/vpnc" ]; then
-	mkdir -p /var/run/vpnc
-	[ -x /sbin/restorecon ] && /sbin/restorecon /var/run/vpnc
+if [ ! -d "${VAR_RUN}" ]; then
+	mkdir -p "${VAR_RUN}"
+	[ -x /sbin/restorecon ] && /sbin/restorecon "${VAR_RUN}"
 fi
 
 # stupid SunOS: no blubber in /usr/local/bin ... (on stdout)
-IPROUTE="`which ip 2> /dev/null | grep '^/'`"
+IPROUTE="${IPROUTE:-`which ip 2> /dev/null | grep '^/'`}"
 
 if ifconfig --help 2>&1 | grep BusyBox > /dev/null; then
 	ifconfig_syntax_inet=""
@@ -121,7 +122,9 @@ if [ -r /etc/openwrt_release ] && [ -n "$OPENWRT_INTERFACE" ]; then
 	include /lib/network
 	MODIFYRESOLVCONF=modify_resolvconf_openwrt
 	RESTORERESOLVCONF=restore_resolvconf_openwrt
-elif [ -x /sbin/resolvconf ] && [ "$OS" != "FreeBSD" ]; then # Optional tool on Debian, Ubuntu, Gentoo - but not FreeBSD, it seems to work different
+elif [ -n "${RESOLVCONF}" ] || ( [ -x "${RESOLVCONF}" ] && [ "$OS" != "FreeBSD" ] ); then # Optional tool on Debian, Ubuntu, Gentoo - but not FreeBSD, it seems to work different
+	RESOLVCONF="${RESOLVCONF:-/sbin/resolvconf}"
+
 	MODIFYRESOLVCONF=modify_resolvconf_manager
 	RESTORERESOLVCONF=restore_resolvconf_manager
 elif [ -x /sbin/netconfig ]; then # tool on Suse after 11.1
@@ -550,11 +553,11 @@ nameserver $i"
 		NEW_RESOLVCONF="$NEW_RESOLVCONF
 domain $CISCO_DEF_DOMAIN"
 	fi
-	echo "$NEW_RESOLVCONF" | /sbin/resolvconf -a $TUNDEV
+	echo "$NEW_RESOLVCONF" | ${RESOLVCONF} -a $TUNDEV
 }
 
 restore_resolvconf_manager() {
-	/sbin/resolvconf -d $TUNDEV
+	${RESOLVCONF} -d $TUNDEV
 }
 
 # ========= Toplevel state handling  =======================================
