@@ -238,7 +238,7 @@ if [ -n "$IPROUTE" ]; then
 		NETWORK="$1"
 		NETMASK="$2"
 		NETMASKLEN="$3"
-		$IPROUTE route replace "$NETWORK/$NETMASKLEN" dev "$TUNDEV"
+		$IPROUTE route replace "$NETWORK/$NETMASKLEN" dev "$TUNDEV" ${ROUTE_METRIC:+metric ${ROUTE_METRIC}}
 		$IPROUTE route flush cache
 	}
 
@@ -553,7 +553,7 @@ nameserver $i"
 		NEW_RESOLVCONF="$NEW_RESOLVCONF
 domain $CISCO_DEF_DOMAIN"
 	fi
-	echo "$NEW_RESOLVCONF" | ${RESOLVCONF} -a $TUNDEV
+	echo "$NEW_RESOLVCONF" | ${RESOLVCONF} ${ROUTE_METRIC:+-m ${ROUTE_METRIC}} -a $TUNDEV
 }
 
 restore_resolvconf_manager() {
