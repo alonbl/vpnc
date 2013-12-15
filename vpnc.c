@@ -390,15 +390,25 @@ static void config_tunnel(struct sa_block *s)
 	setenv("VPNGATEWAY", inet_ntoa(s->dst), 1);
 	setenv("reason", "connect", 1);
 	system(config[CONFIG_SCRIPT]);
+	s->tun_configured = 1;
 	s_atexit_sa = s;
 	atexit(atexit_close);
 }
 
 static void close_tunnel(struct sa_block *s)
 {
-	setenv("reason", "disconnect", 1);
-	system(config[CONFIG_SCRIPT]);
-	tun_close(s->tun_fd, s->tun_name);
+	if (s->tun_configured) {
+		s->tun_configured = 0;
+		setenv("reason", "disconnect", 1);
+		system(config[CONFIG_SCRIPT]);
+	}
+	if (s->tun_fd != -1) {
+		tun_close(s->tun_fd, s->tun_name);
+		if (!config[CONFIG_IF_NAME]) {
+			setenv("reason", "destroy", 1);
+			system(config[CONFIG_SCRIPT]);
+		}
+	}
 }
 
 static int recv_ignore_dup(struct sa_block *s, void *recvbuf, size_t recvbufsize)

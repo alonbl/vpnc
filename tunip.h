@@ -64,6 +64,7 @@ struct sa_block {
 	int tun_fd; /* fd to host via tun/tap */
 	char tun_name[IFNAMSIZ];
 	uint8_t tun_hwaddr[ETH_ALEN];
+	int tun_configured;
 
 	struct in_addr dst; /* ip of concentrator, must be set */
 	struct in_addr src; /* local ip, from getsockname() */
