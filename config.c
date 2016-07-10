@@ -100,7 +100,7 @@ void hex_dump(const char *str, const void *data, ssize_t len, const struct debug
 	printf("\n");
 }
 
-#define GETLINE_MAX_BUFLEN 200
+#define GETLINE_MAX_BUFLEN 512
 
 /*
  * mostly match getline() semantics but:
