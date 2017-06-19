@@ -12,14 +12,21 @@ function echo(msg)
 	WScript.echo(msg);
 }
 
+function run1(cmd)
+{
+	echo(cmd);
+	return (ws.Exec(cmd).StdOut.ReadAll());
+}
+
 function run(cmd)
 {
-	return (ws.Exec(cmd).StdOut.ReadAll());
+	echo(cmd);
+	echo(ws.Exec(cmd).StdOut.ReadAll());
 }
 
 function getDefaultGateway()
 {
-	if (run("route print").match(/Default Gateway: *(.*)/)) {
+	if (run1("ipconfig").match(/Default Gateway.*: (.*)/)) {
 		return (RegExp.$1);
 	}
 	return ("");
@@ -38,6 +45,11 @@ switch (env("reason")) {
 case "pre-init":
 	break;
 case "connect":
+
+var x = new Enumerator(env);
+for(; ! x.atEnd(); x.moveNext()) {
+  echo(x.item());
+}
 	var gw = getDefaultGateway();
 	echo("VPN Gateway: " + env("VPNGATEWAY"));
 	echo("Internal Address: " + env("INTERNAL_IP4_ADDRESS"));
@@ -50,13 +62,17 @@ case "connect":
 
 	echo("Configuring \"" + env("TUNDEV") + "\" interface...");
 	run("netsh interface ip set address \"" + env("TUNDEV") + "\" static " +
-	    env("INTERNAL_IP4_ADDRESS") + " " + internal_ip4_netmask);
+	    env("INTERNAL_IP4_ADDRESS") + " " + internal_ip4_netmask +
+	    " store=active");
+WScript.Sleep(3000);
 
 	// Add direct route for the VPN gateway to avoid routing loops
 	run("route add " + env("VPNGATEWAY") +
             " mask 255.255.255.255 " + gw);
 
         if (env("INTERNAL_IP4_NBNS")) {
+		run("netsh interface ip delete wins \"" +
+			env("TUNDEV") + "\" all");
 		var wins = env("INTERNAL_IP4_NBNS").split(/ /);
 		for (var i = 0; i < wins.length; i++) {
 	                run("netsh interface ip add wins \"" +
@@ -66,11 +82,13 @@ case "connect":
 	}
 
         if (env("INTERNAL_IP4_DNS")) {
+		run("netsh interface ip delete dns \"" +
+			env("TUNDEV") + "\" all");
 		var dns = env("INTERNAL_IP4_DNS").split(/ /);
 		for (var i = 0; i < dns.length; i++) {
 	                run("netsh interface ip add dns \"" +
 			    env("TUNDEV") + "\" " + dns[i]
-			    + " index=" + (i+1));
+			    + " index=" + (i+1) + " validate=no");
 		}
 	}
 	echo("done.");
