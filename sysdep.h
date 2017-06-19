@@ -20,7 +20,9 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#if !defined(__SKIP__)
 #include <netinet/in.h>
+#endif
 
 #if !defined(__CYGWIN__)
 #include <net/if.h>

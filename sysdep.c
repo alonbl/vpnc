@@ -68,6 +68,7 @@
 #include <net/if_tun.h>
 #endif
 
+#define __SKIP__
 #include "sysdep.h"
 
 #if !defined(HAVE_VASPRINTF) || !defined(HAVE_ASPRINTF) || !defined(HAVE_ERROR)
