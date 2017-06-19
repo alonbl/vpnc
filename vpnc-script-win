@@ -1,2 +1,2 @@
 #! /bin/sh
-cscript `cygpath -w /etc/vpnc/vpnc-script-win.js`
+cscript `cygpath -aw $(dirname "$0")/vpnc-script-win.js`
